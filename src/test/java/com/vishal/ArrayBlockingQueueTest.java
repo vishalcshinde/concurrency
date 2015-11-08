@@ -1,31 +1,30 @@
 package com.vishal;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
-public class SemahporeTest {
+public class ArrayBlockingQueueTest {
 
-	Semaphore producerSemaphore = new Semaphore(1);
-	Semaphore consumerSemaphore = new Semaphore(1);
-	AtomicInteger count = new AtomicInteger(0);
-
+	ArrayBlockingQueue<Object> producerQueue = new ArrayBlockingQueue<>(1);
+	ArrayBlockingQueue<Object> consumerQueue = new ArrayBlockingQueue<>(1);
+	AtomicInteger counter = new AtomicInteger(0);
 	@Test
 	public void testProducerConsumer() throws Exception {
 		Runnable t1 = () -> {
 			try {
 				for (int i = 0; i < 100; i++) {
-					System.out.println("Producer -> " + count);
-					while (count.get() >= 2) {
-						consumerSemaphore.acquire();
+					System.out.println("Producer -> " + counter);
+					while(counter.get() > 2) {
+						consumerQueue.take();
 					}
-					work();
+					work(100);
 					add();
-					producerSemaphore.release();
+					producerQueue.offer("");
 
 				}
 			} catch (Exception e) {
@@ -37,37 +36,37 @@ public class SemahporeTest {
 			try {
 				for (int i = 0; i < 100; i++) {
 
-					System.out.println("Consumer -> " + count);
-					while (count.get() <= 0) {
-						producerSemaphore.acquire();
+					System.out.println("Consumer -> " + counter);
+					while(counter.get() <= 0) {
+						producerQueue.take();
 					}
-					work();
+					work(100);
 					remove();
-					consumerSemaphore.release();
+					consumerQueue.offer("");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		};
-
+		consumerQueue.put("");
 		ExecutorService s = Executors.newFixedThreadPool(2);
 		Future<?> f = s.submit(t1);
 		Future<?> f2 = s.submit(t2);
 		f.get();
 		f2.get();
-		System.out.println("End -> " + count);
+		System.out.println("End -> " + counter);
 	}
 
 	private void remove() {
-		count.getAndDecrement();
+		counter.getAndDecrement();
 	}
 
 	private void add() {
-		count.getAndIncrement();
+		counter.getAndIncrement();
 	}
 
-	private void work() throws InterruptedException {
-		Thread.sleep(100);
+	private void work(int time) throws InterruptedException {
+		Thread.sleep(time);
 	}
 
 }
