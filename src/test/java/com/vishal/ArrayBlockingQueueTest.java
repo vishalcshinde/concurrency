@@ -4,7 +4,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
@@ -12,16 +11,14 @@ public class ArrayBlockingQueueTest {
 
 	ArrayBlockingQueue<Object> producerQueue = new ArrayBlockingQueue<>(1);
 	ArrayBlockingQueue<Object> consumerQueue = new ArrayBlockingQueue<>(1);
-	AtomicInteger counter = new AtomicInteger(0);
+	int counter = 0;
 	@Test
 	public void testProducerConsumer() throws Exception {
 		Runnable t1 = () -> {
 			try {
 				for (int i = 0; i < 100; i++) {
 					System.out.println("Producer -> " + counter);
-					while(counter.get() > 2) {
-						consumerQueue.take();
-					}
+					consumerQueue.take();
 					work(100);
 					add();
 					producerQueue.offer("");
@@ -37,9 +34,7 @@ public class ArrayBlockingQueueTest {
 				for (int i = 0; i < 100; i++) {
 
 					System.out.println("Consumer -> " + counter);
-					while(counter.get() <= 0) {
-						producerQueue.take();
-					}
+					producerQueue.take();
 					work(100);
 					remove();
 					consumerQueue.offer("");
@@ -58,11 +53,11 @@ public class ArrayBlockingQueueTest {
 	}
 
 	private void remove() {
-		counter.getAndDecrement();
+		--counter;
 	}
 
 	private void add() {
-		counter.getAndIncrement();
+		++counter;
 	}
 
 	private void work(int time) throws InterruptedException {
